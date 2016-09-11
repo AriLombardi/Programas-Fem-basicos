@@ -1,0 +1,26 @@
+function [ p,e,t ] = refinaMalla(g,p,e,t,estrategia,theta)
+% Refina la malla [p,e,t] de la geometría g.
+% Los valores de los estimadores deben estar en el archivo 'estimadores.txt'
+% estrategia = 1: refina los elementos con estimador > theta*max(estimadores)
+% estrategia = 2: ordena estimadores de mayor a menor, suma desde el mayor
+% hasta que la suma supera theta * suma total, y refina esos elementos.
+
+load estimadores.txt
+Nel=length(estimadores);
+
+if estrategia == 1
+    maxEstim=max(estimadores);
+    marked=[];
+    for i=1:Nel
+        if (estimadores(i)>theta*maxEstim) marked=[marked;i];
+        end
+    end
+    [p,e,t]=refinemesh(g,p,e,t,marked);
+    pdemesh(p,e,t)
+else
+    [est,ind]=sort(estimadores,'descend');
+    suma=sum(estimadores);
+    suma_acum=0;
+    whil
+
+

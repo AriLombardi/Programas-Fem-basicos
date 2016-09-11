@@ -1,0 +1,45 @@
+macro  ReMeshIndicator(Th,Ph,Vh,vindicator)
+{
+	Ph etak;  
+    etak[]=vindicator(0,Ph);
+    cout << " global  Eta  : " << sqrt(etak[].sum) << "  ......... " << "Th.nv = " << Th.nv<< endl;
+	etak[]=sqrt(etak[]);
+    /*plot(etak,fill=1);
+	*/
+
+	/*
+	 * Guarda el archivo con los estimadores calculados
+	 */
+	{
+		ofstream ff("estimadores.txt");
+		for (int i=0;i<Th.nt;i+=1)
+		ff << etak[](i) << endl;
+	}	
+} // end macro  ReMeshIndicator
+
+func f=1;
+
+mesh Th=readmesh("pruebaMesh.msh");
+fespace Vh(Th,P1); 
+fespace Ph(Th,P0); // para el estimador 
+Vh u,w;
+
+problem Poisson(u,w)=int2d(Th)(dx(u)*dx(w) + dy(u)*dy(w)) - int2d(Th)(f*w) + on(1,u=0);
+
+varf indicator2(unused,chiK) = intalledges(Th)(chiK*lenEdge*square(jump(N.x*dx(u)+N.y*dy(u)))) +int2d(Th)(chiK*square(hTriangle*(f+dxx(u)+dyy(u))) );
+
+Poisson;
+//plot(Th,u);
+
+{
+ofstream ff("u.txt");
+for (int i=0;i<Th.nv;i++)
+{
+ff << u[][i] << endl;
+}
+}
+
+real cc=.7;
+ReMeshIndicator(Th,Ph,Vh,indicator2);
+
+

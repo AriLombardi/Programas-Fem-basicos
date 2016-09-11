@@ -1,0 +1,88 @@
+macro  ReMeshIndicator(Th,Ph,Vh,vindicator)
+{
+	Ph etak;  
+    etak[]=vindicator(0,Ph);
+    cout << " global  Eta  : " << sqrt(etak[].sum) << "  ......... " << "Th.nv = " << Th.nv<< endl;
+	etak[]=sqrt(etak[]);
+    /*plot(etak,fill=1);
+	*/
+
+	/*
+	 * Guarda el archivo con los estimadores calculados
+	 */
+	{
+		ofstream ff("estimadores.txt");
+		for (int i=0;i<Th.nt;i+=1)
+		ff << etak[](i) << endl;
+	}	
+} // end macro  ReMeshIndicator
+
+real L2error;
+real dxerror;
+real dyerror;
+real theta0=pi/2.;
+real theta1=2.*pi;
+
+real R=7./3.;
+real p1=-1./6.;
+real p2=1./3.;
+
+func real atan3(real xx,real yy)
+{
+	if (xx==0) {
+		if (yy>=0) {return pi/2.;}
+		else {return 3./2.*pi;}
+		}
+		else {
+			if (xx>0) {
+				if (yy>0) {return atan(yy/xx);}
+				else {return (atan(yy/xx)+2.*pi);}
+				}
+				else {
+					return pi + atan(yy/xx);
+				}
+		}
+}
+
+func f=R * (x^2+y^2)^p1 * sin((2.*atan3(x,y)-pi)/3.);
+func uexact= (x^2+y^2)^p2 * (1 - sqrt(x^2+y^2)) * sin((2.*atan3(x,y)-pi)/3.); /// si f=1 esta no es solución exacta
+// solo para p2=1/3
+func dxuexact = -2./3.*(x^2+y^2)^(p2-.5)*(1 - sqrt(x^2+y^2))*sin((atan3(x,y)+pi)/3.) - (x^2+y^2)^p2*cos(atan3(x,y))*sin((2.*atan3(x,y)-pi)/3.);
+func dyuexact = 2./3.*(x^2+y^2)^(p2-.5)*(1 - sqrt(x^2+y^2))*cos((atan3(x,y)+pi)/3.) - (x^2+y^2)^p2*sin(atan3(x,y))*sin((2.*atan3(x,y)-pi)/3.); 
+//////////////////
+
+
+mesh Th=readmesh("pruebaMesh.msh");
+fespace Vh(Th,P1); 
+fespace Ph(Th,P0); // para el estimador 
+Vh u,w;
+
+problem Poisson(u,w)=int2d(Th)(dx(u)*dx(w) + dy(u)*dy(w)) - int2d(Th)(f*w) + on(1,u=0);
+varf indicator2(unused,chiK) = intalledges(Th)(chiK*lenEdge*square(jump(N.x*dx(u)+N.y*dy(u)))) +int2d(Th)(chiK*square(hTriangle*(f+dxx(u)+dyy(u))) );
+
+Poisson;
+//plot(Th,u);
+
+L2error = sqrt(int2d(Th)((u-uexact)^2));
+dxerror = sqrt(int2d(Th)((dx(u)-dxuexact)^2));
+dyerror = sqrt(int2d(Th)((dy(u)-dyuexact)^2));
+cout << "Error L2: " << L2error << endl;
+cout << "Error semiH1: " << dxerror + dyerror << endl;
+cout << "Error H1: " << L2error + dxerror + dyerror << endl;
+
+ReMeshIndicator(Th,Ph,Vh,indicator2);
+
+
+{
+ofstream ff("u.txt");
+for (int i=0;i<Th.nv;i++)
+{
+ff << u[][i] << endl;
+}
+}
+
+{
+ofstream ff("err.txt",append);
+ff << Th.nv << "   " << L2error << "   "  << dxerror + dyerror << endl;
+}
+
