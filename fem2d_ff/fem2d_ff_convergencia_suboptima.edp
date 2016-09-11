@@ -1,0 +1,70 @@
+real theta0=pi/2.;
+real theta1=2.*pi;
+real L2error;
+real dxerror;
+real dyerror;
+int n=1;
+
+real R=7./3.;
+real p1=-1./6.;
+real p2=1./3.;
+
+func real atan3(real xx,real yy)
+{
+	if (xx==0) {
+		if (yy>=0) {return pi/2.;}
+		else {return 3./2.*pi;}
+		}
+		else {
+			if (xx>0) {
+				if (yy>0) {return atan(yy/xx);}
+				else {return (atan(yy/xx)+2.*pi);}
+				}
+				else {
+					return pi + atan(yy/xx);
+				}
+		}
+}
+
+func f=R * (x^2+y^2)^p1 * sin((2.*atan3(x,y)-pi)/3.);
+func uexact= (x^2+y^2)^p2 * (1 - sqrt(x^2+y^2)) * sin((2.*atan3(x,y)-pi)/3.); /// si f=1 esta no es solución exacta
+// solo para p2=1/3
+func dxuexact = -2./3.*(x^2+y^2)^(p2-.5)*(1 - sqrt(x^2+y^2))*sin((atan3(x,y)+pi)/3.) - (x^2+y^2)^p2*cos(atan3(x,y))*sin((2.*atan3(x,y)-pi)/3.);
+func dyuexact = 2./3.*(x^2+y^2)^(p2-.5)*(1 - sqrt(x^2+y^2))*cos((atan3(x,y)+pi)/3.) - (x^2+y^2)^p2*sin(atan3(x,y))*sin((2.*atan3(x,y)-pi)/3.); 
+//////////////////
+
+border Gamma1(t=theta0,theta1) { x = cos(t); y = sin(t); }
+border Gamma2(t=0,1) { x = 1-t; y = 0; }
+border Gamma3(t=0,1) { x = 0; y = t; }
+
+
+int it=6;
+real[int] errorH1v(it);
+int[int] Nel(it);
+real[int] ordenH1(it-1);
+for (int ii=0;ii<it;ii++)
+{
+	n=2*n;
+	mesh Th=buildmesh(Gamma1(4*n)+Gamma2(n)+Gamma3(n));
+	fespace Vh(Th,P1b);
+	Vh u,w;
+	problem Poisson(u,w)=int2d(Th)(dx(u)*dx(w) + dy(u)*dy(w)) - int2d(Th)(f*w) + on(Gamma1,u=0)+ on(Gamma2,u=0) + on(Gamma3,u=0);
+	Poisson;
+	plot(Th,u,wait=1);
+	
+	L2error = sqrt(int2d(Th)((u-uexact)^2));
+	dxerror = sqrt(int2d(Th)((dx(u)-dxuexact)^2));
+	dyerror = sqrt(int2d(Th)((dy(u)-dyuexact)^2));
+	cout << "Error L2: " << L2error << endl;
+	cout << "Error semiH1: " << dxerror + dyerror << endl;
+	cout << "Error H1: " << L2error + dxerror + dyerror << endl;
+	
+	Nel[ii]=Th.nt;
+	errorH1v[ii]=L2error + dxerror + dyerror;
+	
+	if (ii==0) continue;
+	ordenH1[ii-1]=(log10(errorH1v[ii])-log10(errorH1v[ii-1]))/(log10(Nel[ii])-log10(Nel[ii-1]));  
+}
+
+for (int ii=0;ii<it-1;ii++) cout << "ordenH1 it " << ii << " : " << ordenH1[ii]<< endl;
+

@@ -1,0 +1,47 @@
+real L2error;
+real dxerror;
+real dyerror;
+int n=1;
+
+
+func f=2*pi^2*cos(pi*x)*cos(pi*y);
+func uD=cos(pi*x)*cos(pi*y);
+func uexact= cos(pi*x)*cos(pi*y);
+func dxuexact = -pi*sin(pi*x)*cos(pi*y);
+func dyuexact = -pi*cos(pi*x)*sin(pi*y);
+
+border G1(t=-1,1) {x=t; y=-1; label=1;}
+border G2(t=-1,1) {x=1; y=t; label=1;}
+border G3(t=-1,1) {x=-t; y=1; label=1;}
+border G4(t=-1,1) {x=-1; y=-t; label=1;}
+
+int it=6;
+real[int] errorH1v(it);
+int[int] Nel(it);
+real[int] ordenH1(it-1);
+for (int ii=0;ii<it;ii++)
+{
+	n=2*n;
+	mesh Th=buildmesh(G1(n)+G2(n)+G3(n)+G4(n));
+	fespace Vh(Th,P1);
+	Vh u,w;
+	problem Poisson(u,w)=int2d(Th)(dx(u)*dx(w) + dy(u)*dy(w)) - int2d(Th)(f*w) + on(1,u=uD);
+	Poisson;
+	plot(Th,u,wait=1);
+	
+	L2error = sqrt(int2d(Th)((u-uexact)^2));
+	dxerror = sqrt(int2d(Th)((dx(u)-dxuexact)^2));
+	dyerror = sqrt(int2d(Th)((dy(u)-dyuexact)^2));
+	cout << "Error L2: " << L2error << endl;
+	cout << "Error semiH1: " << dxerror + dyerror << endl;
+	cout << "Error H1: " << L2error + dxerror + dyerror << endl;
+	
+	Nel[ii]=Th.nt;
+	errorH1v[ii]=L2error + dxerror + dyerror;
+	
+	if (ii==0) continue;
+	ordenH1[ii-1]=(log10(errorH1v[ii])-log10(errorH1v[ii-1]))/(log10(Nel[ii])-log10(Nel[ii-1]));  
+}
+
+for (int ii=0;ii<it-1;ii++) cout << "ordenH1 it " << ii << " : " << ordenH1[ii]<< endl;
+

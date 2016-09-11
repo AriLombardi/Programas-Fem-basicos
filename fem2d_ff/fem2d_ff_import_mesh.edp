@@ -1,0 +1,12 @@
+
+func f=1;
+func uD=0;
+
+
+mesh Th=readmesh("pruebaMesh.msh");
+fespace Vh(Th,P1);
+Vh u,w;
+problem Poisson(u,w)=int2d(Th)(dx(u)*dx(w) + dy(u)*dy(w)) - int2d(Th)(f*w) + on(1,u=uD);
+Poisson;
+plot(Th,u,wait=1);
+
