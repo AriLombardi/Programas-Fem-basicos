@@ -1,17 +1,23 @@
 function [p,e,t,u]=programa(g,p,e,t,estrategia,theta,its)
+%  g
 %
 %
 
+
 for it = 1:its
     size(t,2)
-    mesh_Matlab2ff(p,e,t,'pruebamesh');
-    !freefem++ fem2d_ff_estimador.edp -nowait
-    [p,e,t]=refinaMalla(g,p,e,t,estrategia,theta);
+    mesh_Matlab2ff(p,e,t,'pruebamesh');     % guarda la malla en formato freefem
+    % ejecuta el freefem, resulelve y calcula estimadores
+    !freefem++ fem2d_ff_estimador.edp -nowait       
+    if it<its 
+        [p,e,t]=refinaMalla(g,p,e,t,estrategia,theta);   % refina la malla teniendo en cuenta los estimadores   
+    end
     
 end
 figure
 pdemesh(p,e,t)
-load u.txt
+load u.txt u;
+
 figure
 pdemesh(p,e,t,u)
 end

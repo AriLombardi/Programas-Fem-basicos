@@ -4,12 +4,10 @@ macro  ReMeshIndicator(Th,Ph,Vh,vindicator)
     etak[]=vindicator(0,Ph);
     cout << " global  Eta  : " << sqrt(etak[].sum) << "  ......... " << "Th.nv = " << Th.nv<< endl;
 	etak[]=sqrt(etak[]);
-    /*plot(etak,fill=1);
-	*/
+    plot(etak,fill=1,value=1,ColorScheme=2);
 
-	/*
-	 * Guarda el archivo con los estimadores calculados
-	 */
+
+	/*Guarda el archivo con los estimadores calculados*/
 	{
 		ofstream ff("estimadores.txt");
 		for (int i=0;i<Th.nt;i+=1)
@@ -17,20 +15,25 @@ macro  ReMeshIndicator(Th,Ph,Vh,vindicator)
 	}	
 } // end macro  ReMeshIndicator
 
-func f=1;
+func f=1-x^2-y^2;
 
 mesh Th=readmesh("pruebaMesh.msh");
-fespace Vh(Th,P1); 
-fespace Ph(Th,P0); // para el estimador 
+fespace Vh(Th,P1); 	// espacio de elementos finitos
+fespace Ph(Th,P0);  // espacio para definir el estimador 
 Vh u,w;
 
+// problema
 problem Poisson(u,w)=int2d(Th)(dx(u)*dx(w) + dy(u)*dy(w)) - int2d(Th)(f*w) + on(1,u=0);
 
+
+// para calcular el estimador
 varf indicator2(unused,chiK) = intalledges(Th)(chiK*lenEdge*square(jump(N.x*dx(u)+N.y*dy(u)))) +int2d(Th)(chiK*square(hTriangle*(f+dxx(u)+dyy(u))) );
 
+// resuelve el problema
 Poisson;
-//plot(Th,u);
 
+
+// guarda la solución en el archivo u.txt
 {
 ofstream ff("u.txt");
 for (int i=0;i<Th.nv;i++)

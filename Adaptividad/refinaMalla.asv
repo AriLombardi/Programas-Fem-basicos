@@ -3,24 +3,35 @@ function [ p,e,t ] = refinaMalla(g,p,e,t,estrategia,theta)
 % Los valores de los estimadores deben estar en el archivo 'estimadores.txt'
 % estrategia = 1: refina los elementos con estimador > theta*max(estimadores)
 % estrategia = 2: ordena estimadores de mayor a menor, suma desde el mayor
-% hasta que la suma supera theta * suma total, y refina esos elementos.
+%   los cuadrados de los estimadores hasta que la suma supera theta * (suma total),
+%   y refina esos elementos.
 
-load estimadores.txt
+load estimadores.txt        % carga los estimacores calculados con freefem 
 Nel=length(estimadores);
+marcados=[];                % va a contener los elementos marcados
 
-if estrategia == 1
+if estrategia == 1          % estategia del máximo
     maxEstim=max(estimadores);
-    marked=[];
     for i=1:Nel
-        if (estimadores(i)>theta*maxEstim) marked=[marked;i];
+        if (estimadores(i)>theta*maxEstim) 
+            marcados=[marcados;i];
         end
     end
-    [p,e,t]=refinemesh(g,p,e,t,marked);
-    pdemesh(p,e,t)
-else
-    [est,ind]=sort(estimadores,'descend');
-    suma=sum(estimadores);
+else                        % estra
+    [est_ord,ind]=sort(estimadores,'descend');
+    suma_total=sum(estimadores.^2);
     suma_acum=0;
-    whil
+    ii=0;
+    while suma_acum<theta*suma_total
+        ii=ii+1;
+        suma_acum=suma_acum+est_ord(ii)^2;
+        marcados=[marcados;ind(ii)];
+    end
+end
+[p,e,t]=refinemesh(g,p,e,t,marcados);
+figure
+pdemesh(p,e,t)
+end
+        
 
 

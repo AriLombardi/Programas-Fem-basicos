@@ -83,6 +83,6 @@ ff << u[][i] << endl;
 
 {
 ofstream ff("err.txt",append);
-ff << Th.nv << "   " << L2error << "   "  << dxerror + dyerror << endl;
+ff << Th.nv << "   " << L2error << "   "  << L2error + dxerror + dyerror << endl;
 }
 
